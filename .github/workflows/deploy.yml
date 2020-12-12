@@ -1,0 +1,45 @@
+
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-18.04
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Validate ARM Tempalte
+      uses: azure/arm-deploy@v1
+      if: ${{ github.event_name == 'pull_request' }}
+      with:
+        scope: subscription
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTIONID }}
+        region: Australia Southeast
+        template: ./arm/template.jsonc
+        parameters: ./arm/parameters.jsonc
+        deploymentMode: Validate
+    
+    - name: Deploy ARM Tempalte
+      uses: azure/arm-deploy@v1
+      if: ${{ github.event_name == 'push' }}
+      with:
+        scope: subscription
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTIONID }}
+        region: Australia Southeast
+        template: ./arm/template.jsonc
+        parameters: ./arm/parameters.jsonc
+        deploymentMode: Incremental
