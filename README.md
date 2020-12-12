@@ -1,0 +1,1 @@
+# Azure-Automation-Arm-Template
